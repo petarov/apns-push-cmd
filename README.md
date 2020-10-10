@@ -1,7 +1,7 @@
-Apple Push Notification service Command Line Tool
+APNs Command Line Tool
 ===================================================
 
-Transmit your remote notifications to Apple Push Notification service (APNs) from the command line.
+Transmit your remote notifications to Apple Push Notification service from the command line.
 
 # Installation
 
