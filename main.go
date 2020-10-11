@@ -124,7 +124,6 @@ func getCertPool() (caCertPool *x509.CertPool, err error) {
 	// if err != nil {
 	// 	return nil, err
 	// }
-	fmt.Printf("%s", RootGeoTrustGlobal)
 	ok := caCertPool.AppendCertsFromPEM([]byte(RootGeoTrustGlobal))
 	if !ok {
 		return nil, fmt.Errorf("Error loading RootGeoTrustGlobal")
