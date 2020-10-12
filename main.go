@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/pem"
 	"flag"
 	"fmt"
@@ -89,6 +91,8 @@ var (
 	IsExplicitTrust bool
 	// DeviceToken Base64 encoded push token for the device
 	DeviceToken string
+	// DeviceTokenHex Hexadecimal encoded push token for the device
+	DeviceTokenHex string
 	// MdmTopic The topic the device subscribes to
 	MdmTopic string
 	// MdmPushMagic The magic string that has to be included in the push notification message.
@@ -102,6 +106,7 @@ func init() {
 	flag.StringVar(&ClientKeyPath, "cert-key", "", "The path to APNs client cerificate key")
 	flag.BoolVar(&IsExplicitTrust, "x-trust", false, "Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates (Usually you should not need to do this)")
 	flag.StringVar(&DeviceToken, "push-token", "", "Base64 encoded push token for the device")
+	flag.StringVar(&DeviceTokenHex, "push-token-hex", "", "Hexadecimal encoded push token for the device")
 	flag.StringVar(&MdmTopic, "mdm-topic", "", "The topic the device subscribes to")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
 }
@@ -192,9 +197,16 @@ func getClient(cert *tls.Certificate) (client *http.Client, err error) {
 	return client, nil
 }
 
+func toHex(base64Text string) (result string, err error) {
+	p, err := base64.StdEncoding.DecodeString(base64Text)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(p), nil
+}
+
 func main() {
 	fmt.Printf("%s v%s - Apple Push Notification service Command Line Tool\n", APPNAME, VERSION)
-
 	flag.Parse()
 
 	cert, err := getClientCert()
@@ -207,7 +219,23 @@ func main() {
 		log.Fatalf("Error creating HTTP client: %s", err)
 	}
 
-	var url = fmt.Sprintf("https://%s/3/device/123", ApnsProductionHost)
+	var url = "https://%s/3/device/"
+
+	url = fmt.Sprintf(url, ApnsProductionHost)
+
+	if len(DeviceTokenHex) > 0 {
+		url = url + DeviceTokenHex
+	} else if len(DeviceToken) > 0 {
+		token, err := toHex(DeviceToken)
+		if err != nil {
+			log.Fatalf("Error decoding hex device token: %s", err)
+		}
+		url = url + token
+	} else {
+		flag.PrintDefaults()
+		log.Fatalf("Device token not specified!")
+	}
+
 	var req *http.Request
 
 	if len(MdmPushMagic) > 0 && len(MdmTopic) > 0 {
@@ -221,6 +249,8 @@ func main() {
 		log.Fatalf("Parameters not supported!")
 		// TODO
 	}
+
+	log.Println(fmt.Sprintf("POST %s", url))
 
 	resp, err := client.Do(req)
 	if err != nil {
