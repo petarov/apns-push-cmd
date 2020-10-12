@@ -190,7 +190,7 @@ func getClient(cert *tls.Certificate) (client *http.Client, err error) {
 	}
 
 	client = &http.Client{
-		Timeout: 60 * time.Second,
+		Timeout: 20 * time.Second,
 	}
 
 	client.Transport = &http2.Transport{
@@ -257,6 +257,7 @@ func main() {
 	}
 
 	log.Println(fmt.Sprintf("POST %s", url))
+	log.Println("Sending...")
 
 	resp, err := client.Do(req)
 	if err != nil {
