@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -9,7 +10,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/fatih/color"
@@ -17,8 +17,8 @@ import (
 	"golang.org/x/net/http2"
 )
 
-// APP_NAME Name
-const APP_NAME = "apns-push-cmd"
+// APPNAME App Name
+const APPNAME = "apns-push-cmd"
 
 // VERSION Version
 const VERSION = "1.0"
@@ -29,7 +29,6 @@ var (
 	red                = color.New(color.FgRed).SprintFunc()
 	ApnsProductionHost = "api.push.apple.com"
 	ApnsSandboxHost    = "api.sandbox.push.apple.com"
-	CaCertFiles        = [1]string{"AppleISTCA2G1.cer"}
 	RootGeoTrustGlobal = `-----BEGIN CERTIFICATE-----
 MIIDVDCCAjygAwIBAgIDAjRWMA0GCSqGSIb3DQEBBQUAMEIxCzAJBgNVBAYTAlVT
 MRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMRswGQYDVQQDExJHZW9UcnVzdCBHbG9i
@@ -78,8 +77,6 @@ XorXykuxx8lYmtA225aV7LaB5PLNbxt5h0wQPInkTfpU3Kqm
 )
 
 var (
-	// IsMdm ConfigPath config.yml file path
-	IsMdm bool
 	// KeystorePath The path to a APNs PKCS#12 certificate container
 	KeystorePath string
 	// KeystorePassword The password to open the certificate file container
@@ -88,32 +85,25 @@ var (
 	ClientCertPath string
 	// ClientKeyPath The path to APNs client cerificate key
 	ClientKeyPath string
-	// IsExplicitTrust Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates.
+	// IsExplicitTrust Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates
 	IsExplicitTrust bool
+	// DeviceToken Base64 encoded push token for the device
+	DeviceToken string
+	// MdmTopic The topic the device subscribes to
+	MdmTopic string
+	// MdmPushMagic The magic string that has to be included in the push notification message.
+	MdmPushMagic string
 )
 
 func init() {
-	flag.BoolVar(&IsMdm, "mdm", false, "Is this an mdm")
 	flag.StringVar(&KeystorePath, "cert-p12", "", "The path to a APNs PKCS#12 certificate container")
 	flag.StringVar(&KeystorePassword, "cert-pass", "", "The password to open the certificate file container")
 	flag.StringVar(&ClientCertPath, "cert-file", "", "The path to APNs client ceritificate file (If -cert-p12 has not been specified)")
 	flag.StringVar(&ClientKeyPath, "cert-key", "", "The path to APNs client cerificate key")
 	flag.BoolVar(&IsExplicitTrust, "x-trust", false, "Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates (Usually you should not need to do this)")
-}
-
-func verifyPath(path string, what string, mustExist bool) {
-	if len(path) < 1 {
-		redColor.Println(what + " path not specified")
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-	if mustExist {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			redColor.Println(what + " path not found")
-			flag.PrintDefaults()
-			os.Exit(1)
-		}
-	}
+	flag.StringVar(&DeviceToken, "push-token", "", "Base64 encoded push token for the device")
+	flag.StringVar(&MdmTopic, "mdm-topic", "", "The topic the device subscribes to")
+	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
 }
 
 func getCertPool() (caCertPool *x509.CertPool, err error) {
@@ -172,22 +162,14 @@ func getClientCert() (_ *tls.Certificate, err error) {
 	return &cert, nil
 }
 
-func main() {
-	fmt.Printf("%s v%s - Apple Push Notification service Command Line Tool\n", APP_NAME, VERSION)
-
-	flag.Parse()
-
-	cert, err := getClientCert()
-	if err != nil {
-		log.Fatalf("Error loading/adding client cert: %s", err)
-	}
-
+func getClient(cert *tls.Certificate) (client *http.Client, err error) {
 	var tlsConfig *tls.Config
 
 	if IsExplicitTrust {
 		caCertPool, err := getCertPool()
 		if err != nil {
-			log.Fatalf("Error loading/adding root CAs: %s", err)
+			log.Printf("Error loading/adding root CAs!")
+			return nil, err
 		}
 		tlsConfig = &tls.Config{
 			Certificates: []tls.Certificate{*cert},
@@ -199,7 +181,7 @@ func main() {
 		}
 	}
 
-	client := &http.Client{
+	client = &http.Client{
 		Timeout: 60 * time.Second,
 	}
 
@@ -207,7 +189,40 @@ func main() {
 		TLSClientConfig: tlsConfig,
 	}
 
-	resp, err := client.Get(fmt.Sprintf("https://%s/3/device/123", ApnsProductionHost))
+	return client, nil
+}
+
+func main() {
+	fmt.Printf("%s v%s - Apple Push Notification service Command Line Tool\n", APPNAME, VERSION)
+
+	flag.Parse()
+
+	cert, err := getClientCert()
+	if err != nil {
+		log.Fatalf("Error loading/adding client cert: %s", err)
+	}
+
+	client, err := getClient(cert)
+	if err != nil {
+		log.Fatalf("Error creating HTTP client: %s", err)
+	}
+
+	var url = fmt.Sprintf("https://%s/3/device/123", ApnsProductionHost)
+	var req *http.Request
+
+	if len(MdmPushMagic) > 0 && len(MdmTopic) > 0 {
+		var body = []byte(fmt.Sprintf(`{"aps":{"mdm": "%s"}}`, MdmPushMagic))
+		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
+		if err != nil {
+			log.Fatalf("Error creating POST request: %s", err)
+		}
+		req.Header.Set("apns-topic", MdmTopic)
+	} else {
+		log.Fatalf("Parameters not supported!")
+		// TODO
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatalf("Error in HTTP request: %s", err)
 	}
@@ -218,7 +233,5 @@ func main() {
 		log.Fatalf("Error reading HTTP response body: %s", err)
 	}
 
-	fmt.Printf(
-		"Got response %d: %s %s\n",
-		resp.StatusCode, resp.Proto, string(body))
+	fmt.Printf("Response: (%d): %s %s\n", resp.StatusCode, resp.Proto, string(body))
 }
