@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/fatih/color"
 	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/net/http2"
 )
@@ -26,11 +25,10 @@ const APPNAME = "apns-push-cmd"
 const VERSION = "1.0"
 
 var (
-	redColor           = color.New(color.FgRed)
-	cyan               = color.New(color.FgCyan).SprintFunc()
-	red                = color.New(color.FgRed).SprintFunc()
+	// ApnsSandboxHost Development push notifications
+	ApnsSandboxHost = "api.sandbox.push.apple.com"
+	// ApnsProductionHost Production push notifications
 	ApnsProductionHost = "api.push.apple.com"
-	ApnsSandboxHost    = "api.sandbox.push.apple.com"
 	RootGeoTrustGlobal = `-----BEGIN CERTIFICATE-----
 MIIDVDCCAjygAwIBAgIDAjRWMA0GCSqGSIb3DQEBBQUAMEIxCzAJBgNVBAYTAlVT
 MRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMRswGQYDVQQDExJHZW9UcnVzdCBHbG9i
@@ -98,7 +96,7 @@ var (
 	// MdmPushMagic The magic string that has to be included in the push notification message.
 	MdmPushMagic string
 	// Sandbox Sends push notification to APNs sandbox at api.sandbox.push.apple.com
-	Sandbox bool
+	IsSandbox bool
 )
 
 func init() {
@@ -111,7 +109,7 @@ func init() {
 	flag.StringVar(&DeviceTokenHex, "push-token-hex", "", "Hexadecimal encoded push token for the device")
 	flag.StringVar(&MdmTopic, "mdm-topic", "", "The topic the device subscribes to")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
-	flag.BoolVar(&Sandbox, "sandbox", false, "Sends push notification to APNs sandbox at api.sandbox.push.apple.com")
+	flag.BoolVar(&IsSandbox, "sandbox", false, "Sends push notification to APNs sandbox at api.sandbox.push.apple.com")
 }
 
 func getCertPool() (caCertPool *x509.CertPool, err error) {
@@ -223,7 +221,7 @@ func main() {
 	}
 
 	var url = "https://%s/3/device/"
-	if Sandbox {
+	if IsSandbox {
 		url = fmt.Sprintf(url, ApnsSandboxHost)
 	} else {
 		url = fmt.Sprintf(url, ApnsProductionHost)
