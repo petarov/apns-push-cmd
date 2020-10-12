@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"time"
 
 	"golang.org/x/crypto/pkcs12"
@@ -87,17 +88,18 @@ var (
 	ClientKeyPath string
 	// IsExplicitTrust Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates
 	IsExplicitTrust bool
-	// DeviceToken Base64 encoded push token for the device
+	// DeviceToken Hexadecimal or Base64 encoded push token for the device
 	DeviceToken string
-	// DeviceTokenHex Hexadecimal encoded push token for the device
-	DeviceTokenHex string
-	// MdmTopic The topic the device subscribes to
-	MdmTopic string
+	// PushTopic The topic the device subscribes to
+	PushTopic string
 	// MdmPushMagic The magic string that has to be included in the push notification message.
 	MdmPushMagic string
-	// Sandbox Sends push notification to APNs sandbox at api.sandbox.push.apple.com
+	// IsSandbox Sends push notification to APNs sandbox at api.sandbox.push.apple.com
 	IsSandbox bool
 )
+
+// Required Mandatory parameters
+var Required = []string{"token", "topic"}
 
 func init() {
 	flag.StringVar(&KeystorePath, "cert-p12", "", "The path to a APNs PKCS#12 certificate container")
@@ -105,9 +107,8 @@ func init() {
 	flag.StringVar(&ClientCertPath, "cert-file", "", "The path to APNs client ceritificate file (If -cert-p12 has not been specified)")
 	flag.StringVar(&ClientKeyPath, "cert-key", "", "The path to APNs client cerificate key")
 	flag.BoolVar(&IsExplicitTrust, "x-trust", false, "Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates (Usually you should not need to do this)")
-	flag.StringVar(&DeviceToken, "push-token", "", "Base64 encoded push token for the device")
-	flag.StringVar(&DeviceTokenHex, "push-token-hex", "", "Hexadecimal encoded push token for the device")
-	flag.StringVar(&MdmTopic, "mdm-topic", "", "The topic the device subscribes to")
+	flag.StringVar(&DeviceToken, "token", "", "Hexadecimal or Base64 encoded push token for the device")
+	flag.StringVar(&PushTopic, "topic", "", "The topic the device subscribes to")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
 	flag.BoolVar(&IsSandbox, "sandbox", false, "Sends push notification to APNs sandbox at api.sandbox.push.apple.com")
 }
@@ -198,17 +199,32 @@ func getClient(cert *tls.Certificate) (client *http.Client, err error) {
 	return client, nil
 }
 
-func toHex(base64Text string) (result string, err error) {
-	p, err := base64.StdEncoding.DecodeString(base64Text)
-	if err != nil {
-		return "", err
+func getToken(tokenParam string) (result string, err error) {
+	rxHex := regexp.MustCompile("^[0-9a-fA-F]+$")
+	if rxHex.MatchString(tokenParam) {
+		return tokenParam, nil
 	}
-	return hex.EncodeToString(p), nil
+
+	dec, err := base64.StdEncoding.DecodeString(tokenParam)
+	if err != nil {
+		return tokenParam, nil
+	}
+	return hex.EncodeToString(dec), nil
 }
 
 func main() {
 	fmt.Printf("%s v%s - Apple Push Notification service Command Line Tool\n", APPNAME, VERSION)
 	flag.Parse()
+
+	passed := make(map[string]bool)
+	flag.Visit(func(f *flag.Flag) {
+		passed[f.Name] = true
+	})
+	for _, r := range Required {
+		if !passed[r] {
+			log.Fatalf("Missing required argument: %s", r)
+		}
+	}
 
 	cert, err := getClientCert()
 	if err != nil {
@@ -227,28 +243,21 @@ func main() {
 		url = fmt.Sprintf(url, ApnsProductionHost)
 	}
 
-	if len(DeviceTokenHex) > 0 {
-		url = url + DeviceTokenHex
-	} else if len(DeviceToken) > 0 {
-		token, err := toHex(DeviceToken)
-		if err != nil {
-			log.Fatalf("Error decoding hex device token: %s", err)
-		}
-		url = url + token
-	} else {
-		flag.PrintDefaults()
-		log.Fatalf("Device token not specified!")
+	token, err := getToken(DeviceToken)
+	if err != nil {
+		log.Fatalf("Error decoding hex device token: %s", err)
 	}
+	url = url + token
 
 	var req *http.Request
 
-	if len(MdmPushMagic) > 0 && len(MdmTopic) > 0 {
+	if len(MdmPushMagic) > 0 {
 		var body = []byte(fmt.Sprintf(`{"aps":{"mdm": "%s"}}`, MdmPushMagic))
 		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
 		if err != nil {
 			log.Fatalf("Error creating POST request: %s", err)
 		}
-		req.Header.Set("apns-topic", MdmTopic)
+		req.Header.Set("apns-topic", PushTopic)
 	} else {
 		log.Fatalf("Parameters not supported!")
 		// TODO
