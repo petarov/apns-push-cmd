@@ -97,6 +97,8 @@ var (
 	MdmTopic string
 	// MdmPushMagic The magic string that has to be included in the push notification message.
 	MdmPushMagic string
+	// Sandbox Sends push notification to APNs sandbox at api.sandbox.push.apple.com
+	Sandbox bool
 )
 
 func init() {
@@ -109,6 +111,7 @@ func init() {
 	flag.StringVar(&DeviceTokenHex, "push-token-hex", "", "Hexadecimal encoded push token for the device")
 	flag.StringVar(&MdmTopic, "mdm-topic", "", "The topic the device subscribes to")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
+	flag.BoolVar(&Sandbox, "sandbox", false, "Sends push notification to APNs sandbox at api.sandbox.push.apple.com")
 }
 
 func getCertPool() (caCertPool *x509.CertPool, err error) {
@@ -220,8 +223,11 @@ func main() {
 	}
 
 	var url = "https://%s/3/device/"
-
-	url = fmt.Sprintf(url, ApnsProductionHost)
+	if Sandbox {
+		url = fmt.Sprintf(url, ApnsSandboxHost)
+	} else {
+		url = fmt.Sprintf(url, ApnsProductionHost)
+	}
 
 	if len(DeviceTokenHex) > 0 {
 		url = url + DeviceTokenHex
