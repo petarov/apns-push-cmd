@@ -291,5 +291,11 @@ func main() {
 		log.Fatalf("Error reading HTTP response body: %s", err)
 	}
 
-	fmt.Printf("Response: (%d): %s %s\n", resp.StatusCode, resp.Proto, string(body))
+	for k, v := range resp.Header {
+		fmt.Print(k)
+		fmt.Print(": ")
+		fmt.Println(v)
+	}
+
+	fmt.Printf("Response: %s (%d) %s\n", resp.Proto, resp.StatusCode, string(body))
 }
