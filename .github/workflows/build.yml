@@ -42,7 +42,7 @@ jobs:
           GOOS=linux GOARCH=386 go build -o apnscmd_linux_386
           GOOS=linux GOARCH=arm64 go build -o apnscmd_linux_arm64
           GOOS=darwin GOARCH=amd64 go build -o apnscmd_darwin_amd64
-          GOOS=windows GOARCH=386 go build -o apnscmd_windows_386
+          GOOS=windows GOARCH=386 go build -o apnscmd_windows_386.exe
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:

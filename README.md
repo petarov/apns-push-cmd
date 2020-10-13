@@ -10,7 +10,7 @@ Authentication mechanism support | Status
 
 # Installation
 
-TODO
+[Download binaries](https://github.com/petarov/apns-push-cmd/releases/tag/latest) for Linux, macOS and Windows.
 
 # Usage
 

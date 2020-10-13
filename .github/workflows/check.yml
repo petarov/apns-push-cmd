@@ -1,4 +1,4 @@
-name: CI Check Code (Ubuntu x86_64)
+name: CI Check PR (Ubuntu x86_64)
 
 on: [ pull_request_target ]
 
@@ -10,17 +10,18 @@ jobs:
         go: [ '1.15' ]
         arch: [ '1.15' ]
     steps:
-      - uses: actions/checkout@v2
-
       - name: Set up Go v${{ matrix.go }}
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go }}
+
+      - name: Checkout code
+      - uses: actions/checkout@v2
 
       - name: Install deps
         run: |
           go version
-          go get
+          go get -v -d ./...
 
       - name: Cache modules
         uses: actions/cache@v2
@@ -31,3 +32,6 @@ jobs:
 
       - name: Vet code
         run: go vet
+
+      - name: Sample Build
+        run: go build -v .
