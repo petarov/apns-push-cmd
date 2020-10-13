@@ -96,6 +96,8 @@ var (
 	MdmPushMagic string
 	// IsSandbox Sends push notification to APNs sandbox at api.sandbox.push.apple.com
 	IsSandbox bool
+	// PushAlertMessage Alert text to display for app push notifications
+	PushAlertMessage string
 )
 
 // Required Mandatory parameters
@@ -111,6 +113,7 @@ func init() {
 	flag.StringVar(&PushTopic, "topic", "", "The topic the device subscribes to")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
 	flag.BoolVar(&IsSandbox, "sandbox", false, "Sends push notification to APNs sandbox at api.sandbox.push.apple.com")
+	flag.StringVar(&PushAlertMessage, "alert-text", "Hello from app-push-cmd!", "Alert text to display for app push notifications")
 }
 
 func getCertPool() (caCertPool *x509.CertPool, err error) {
@@ -252,15 +255,22 @@ func main() {
 	var req *http.Request
 
 	if len(MdmPushMagic) > 0 {
-		var body = []byte(fmt.Sprintf(`{"aps":{"mdm": "%s"}}`, MdmPushMagic))
+		var body = []byte(fmt.Sprintf(`{"aps": {"mdm": "%s"}}`, MdmPushMagic))
 		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
 		if err != nil {
-			log.Fatalf("Error creating POST request: %s", err)
+			log.Fatalf("Error creating mdm POST request: %s", err)
 		}
 		req.Header.Set("apns-topic", PushTopic)
 	} else {
-		log.Fatalf("Parameters not supported!")
-		// TODO
+		var body = []byte(fmt.Sprintf(`{"aps": {"alert" : "%s", "sound": "default"}}`, PushAlertMessage))
+		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
+		if err != nil {
+			log.Fatalf("Error creating alert POST request: %s", err)
+		}
+		req.Header.Set("apns-push-type", "alert")
+		req.Header.Set("apns-expiration", "0")
+		//req.Header.Set("apns-priority", "10")
+		req.Header.Set("apns-topic", PushTopic)
 	}
 
 	log.Println(fmt.Sprintf("POST %s", url))
