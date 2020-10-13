@@ -216,7 +216,7 @@ func getToken(tokenParam string) (result string, err error) {
 }
 
 func main() {
-	fmt.Printf("%s v%s - Apple Push Notification service Command Line Tool\n", APPNAME, VERSION)
+	fmt.Printf("%s v%s - Apple Push Notification service Command Line Push\n", APPNAME, VERSION)
 	flag.Parse()
 
 	passed := make(map[string]bool)

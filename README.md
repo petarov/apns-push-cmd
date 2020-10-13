@@ -1,7 +1,9 @@
-APNs Command Line Tool :envelope:
+APNs Command Line Push
 ===================================================
 
-Transmit your remote notifications to Apple Push Notification service from the command line.
+![build](https://github.com/petarov/apns-push-cmd/workflows/CI%20Build%20(Ubuntu%20x86_64)/badge.svg)
+
+Send your push notifications to Apple Push Notification service from the command line. :envelope:
 
 Authentication mechanism support | Status
 ---------------------------------|--------
@@ -24,7 +26,7 @@ Send a push notification to your app using certificate-based authentication:
         -token 'c7b68e4eb7d604876bf5836133479ffa49449c669f7e6b79318ae59032e83c24' \
         -topic 'com.my.app'
 
-Send an mdm push notification using certificate-based authentication with a PKCS#12 keystore.
+Send an mdm push notification using certificate-based authentication with a PKCS#12 keystore:
 
     apnscmd_linux_amd64 -cert-p12 apns.p12 -cert-pass <my password> \
         -token 'v2RwEsm69Go4aY4vSFY2pRLped2BMqETO3gDGBx7XmxKwSaKtZik7Q==' \
