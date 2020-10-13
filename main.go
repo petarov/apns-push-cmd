@@ -109,8 +109,8 @@ func init() {
 	flag.StringVar(&ClientCertPath, "cert-file", "", "The path to APNs client ceritificate file (If -cert-p12 has not been specified)")
 	flag.StringVar(&ClientKeyPath, "cert-key", "", "The path to APNs client cerificate key")
 	flag.BoolVar(&IsExplicitTrust, "x-trust", false, "Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates (Usually you should not need to do this)")
-	flag.StringVar(&DeviceToken, "token", "", "Hexadecimal or Base64 encoded push token for the device")
-	flag.StringVar(&PushTopic, "topic", "", "The topic the device subscribes to")
+	flag.StringVar(&DeviceToken, "token", "", "Required. Hexadecimal or Base64 encoded push token for the device")
+	flag.StringVar(&PushTopic, "topic", "", "Required. The topic the device subscribes to")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
 	flag.BoolVar(&IsSandbox, "sandbox", false, "Sends push notification to APNs sandbox at api.sandbox.push.apple.com")
 	flag.StringVar(&PushAlertMessage, "alert-text", "Hello from app-push-cmd!", "Alert text to display for app push notifications")
@@ -225,6 +225,7 @@ func main() {
 	})
 	for _, r := range Required {
 		if !passed[r] {
+			flag.PrintDefaults()
 			log.Fatalf("Missing required argument: %s", r)
 		}
 	}
