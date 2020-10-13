@@ -253,28 +253,31 @@ func main() {
 	url = url + token
 
 	var req *http.Request
+	var pushType string
 
 	if len(MdmPushMagic) > 0 {
-		var body = []byte(fmt.Sprintf(`{"aps": {"mdm": "%s"}}`, MdmPushMagic))
+		var body = []byte(fmt.Sprintf(`{"aps": {}, "mdm": "%s"}`, MdmPushMagic))
 		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
 		if err != nil {
 			log.Fatalf("Error creating mdm POST request: %s", err)
 		}
-		req.Header.Set("apns-topic", PushTopic)
+		pushType = "mdm"
 	} else {
 		var body = []byte(fmt.Sprintf(`{"aps": {"alert" : "%s", "sound": "default"}}`, PushAlertMessage))
 		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
 		if err != nil {
 			log.Fatalf("Error creating alert POST request: %s", err)
 		}
-		req.Header.Set("apns-push-type", "alert")
-		req.Header.Set("apns-expiration", "0")
-		//req.Header.Set("apns-priority", "10")
-		req.Header.Set("apns-topic", PushTopic)
+		pushType = "alert"
 	}
 
+	req.Header.Set("apns-push-type", pushType)
+	req.Header.Set("apns-expiration", "0")
+	//req.Header.Set("apns-priority", "10")
+	req.Header.Set("apns-topic", PushTopic)
+
 	log.Println(fmt.Sprintf("POST %s", url))
-	log.Println("Sending...")
+	log.Println(fmt.Sprintf("Sending (%s)...", pushType))
 
 	resp, err := client.Do(req)
 	if err != nil {
