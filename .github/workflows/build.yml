@@ -1,0 +1,54 @@
+name: CI Build (Ubuntu x86_64)
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.15' ]
+        arch: [ '1.15' ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go v${{ matrix.go }}
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Install deps
+        run: |
+          go version
+          go get
+
+      - name: Cache modules
+        uses: actions/cache@v2
+        with:
+          path: $GOPATH/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go
+
+      - name: Vet code
+        run: go vet
+
+      - name: Build binaries
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o apnscmd_linux_amd64
+          GOOS=linux GOARCH=386 go build -o apnscmd_linux_386
+          GOOS=linux GOARCH=arm64 go build -o apnscmd_linux_arm64
+          GOOS=darwin GOARCH=amd64 go build -o apnscmd_darwin_amd64
+          GOOS=windows GOARCH=386 go build -o apnscmd_windows_386
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Latest Build"
+          files: |
+            LICENSE
+            apnscmd_*

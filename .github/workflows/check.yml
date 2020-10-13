@@ -1,0 +1,33 @@
+name: CI Check Code (Ubuntu x86_64)
+
+on: [ pull_request_target ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.15' ]
+        arch: [ '1.15' ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go v${{ matrix.go }}
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Install deps
+        run: |
+          go version
+          go get
+
+      - name: Cache modules
+        uses: actions/cache@v2
+        with:
+          path: $GOPATH/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go
+
+      - name: Vet code
+        run: go vet
