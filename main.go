@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -15,6 +16,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/net/http2"
 )
@@ -30,6 +32,7 @@ var (
 	ApnsSandboxHost = "api.sandbox.push.apple.com"
 	// ApnsProductionHost Production push notifications
 	ApnsProductionHost = "api.push.apple.com"
+	// RootGeoTrustGlobal Embedded Root CA
 	RootGeoTrustGlobal = `-----BEGIN CERTIFICATE-----
 MIIDVDCCAjygAwIBAgIDAjRWMA0GCSqGSIb3DQEBBQUAMEIxCzAJBgNVBAYTAlVT
 MRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMRswGQYDVQQDExJHZW9UcnVzdCBHbG9i
@@ -50,6 +53,7 @@ PseKUgzbFbS9bZvlxrFUaKnjaZC2mqUPuLk/IH2uSrW4nOQdtqvmlKXBx4Ot2/Un
 hw4EbNX/3aBd7YdStysVAq45pmp06drE57xNNB6pXE0zX5IJL4hmXXeXxx12E6nV
 5fEWCRE11azbJHFwLJhWC9kXtNHjUStedejV0NxPNO3CBWaAocvmMw==
 -----END CERTIFICATE-----`
+	// RootAppleISTCA2G1 Embedded Subordinate CA
 	RootAppleISTCA2G1 = `-----BEGIN CERTIFICATE-----
 MIIEQDCCAyigAwIBAgIDAjp0MA0GCSqGSIb3DQEBCwUAMEIxCzAJBgNVBAYTAlVT
 MRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMRswGQYDVQQDExJHZW9UcnVzdCBHbG9i
@@ -78,14 +82,20 @@ XorXykuxx8lYmtA225aV7LaB5PLNbxt5h0wQPInkTfpU3Kqm
 )
 
 var (
-	// KeystorePath The path to a APNs PKCS#12 certificate container
+	// KeystorePath The path to a APNs PKCS#12 certificate container (.p12, .pfx)
 	KeystorePath string
 	// KeystorePassword The password to open the certificate file container
 	KeystorePassword string
-	// ClientCertPath The path to APNs client ceritificate file
+	// ClientCertPath The path to APNs client ceritificate file (.pem, .der)
 	ClientCertPath string
-	// ClientKeyPath The path to APNs client cerificate key
+	// ClientKeyPath The path to APNs client cerificate key (.pem, .der)
 	ClientKeyPath string
+	// AuthTokenPath The path to the authentication token signing key (.p8)
+	AuthTokenPath string
+	// KeyID The 10-character string with the Key ID
+	KeyID string
+	// TeamID The 10-character Team ID from your developer account
+	TeamID string
 	// IsExplicitTrust Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates
 	IsExplicitTrust bool
 	// DeviceToken Hexadecimal or Base64 encoded push token for the device
@@ -104,10 +114,13 @@ var (
 var Required = []string{"token", "topic"}
 
 func init() {
-	flag.StringVar(&KeystorePath, "cert-p12", "", "The path to a APNs PKCS#12 certificate container")
+	flag.StringVar(&KeystorePath, "cert-p12", "", "The path to a APNs PKCS#12 certificate container (.p12, .pfx)")
 	flag.StringVar(&KeystorePassword, "cert-pass", "", "The password to open the certificate file container")
-	flag.StringVar(&ClientCertPath, "cert-file", "", "The path to APNs client ceritificate file (If -cert-p12 has not been specified)")
-	flag.StringVar(&ClientKeyPath, "cert-key", "", "The path to APNs client cerificate key")
+	flag.StringVar(&ClientCertPath, "cert-file", "", "The path to APNs client ceritificate file, if -cert-p12 has not been specified (.pem, .der)")
+	flag.StringVar(&ClientKeyPath, "cert-key", "", "The path to APNs client cerificate key (.pem, .der)")
+	flag.StringVar(&AuthTokenPath, "auth-token", "", "The path to the authentication token signing key (.p8)")
+	flag.StringVar(&KeyID, "key-id", "", "The 10-character string with the Key ID")
+	flag.StringVar(&TeamID, "team-id", "", "The 10-character Team ID from your developer account")
 	flag.BoolVar(&IsExplicitTrust, "x-trust", false, "Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates (Usually you should not need to do this)")
 	flag.StringVar(&DeviceToken, "token", "", "Required. Hexadecimal or Base64 encoded push token for the device")
 	flag.StringVar(&PushTopic, "topic", "", "Required. The topic the device subscribes to")
@@ -172,6 +185,42 @@ func getClientCert() (_ *tls.Certificate, err error) {
 	return &cert, nil
 }
 
+func getClientBearerToken() (auth string, err error) {
+	tokenBytes, err := ioutil.ReadFile(AuthTokenPath)
+	if err != nil {
+		return "", err
+	}
+
+	block, _ := pem.Decode(tokenBytes)
+	if block == nil {
+		return "", errors.New("Auth token does not seem to be a valid .p8 key file")
+	}
+
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return "", err
+	}
+
+	jwtToken := &jwt.Token{
+		Header: map[string]interface{}{
+			"alg": "ES256",
+			"kid": KeyID,
+		},
+		Claims: jwt.MapClaims{
+			"iss": TeamID,
+			"iat": time.Now().Unix(),
+		},
+		Method: jwt.SigningMethodES256,
+	}
+
+	bearer, err := jwtToken.SignedString(key)
+	if err != nil {
+		return "", err
+	}
+
+	return bearer, nil
+}
+
 func getClient(cert *tls.Certificate) (client *http.Client, err error) {
 	var tlsConfig *tls.Config
 
@@ -181,28 +230,27 @@ func getClient(cert *tls.Certificate) (client *http.Client, err error) {
 			log.Printf("Error loading/adding root CAs!")
 			return nil, err
 		}
-		tlsConfig = &tls.Config{
-			Certificates: []tls.Certificate{*cert},
-			RootCAs:      caCertPool,
+		if cert != nil {
+			tlsConfig = &tls.Config{
+				Certificates: []tls.Certificate{*cert},
+				RootCAs:      caCertPool,
+			}
+		} else {
+			tlsConfig = &tls.Config{RootCAs: caCertPool}
 		}
+	} else if cert != nil {
+		tlsConfig = &tls.Config{Certificates: []tls.Certificate{*cert}}
 	} else {
-		tlsConfig = &tls.Config{
-			Certificates: []tls.Certificate{*cert},
-		}
+		tlsConfig = &tls.Config{}
 	}
 
-	client = &http.Client{
-		Timeout: 20 * time.Second,
-	}
-
-	client.Transport = &http2.Transport{
-		TLSClientConfig: tlsConfig,
-	}
+	client = &http.Client{Timeout: 20 * time.Second}
+	client.Transport = &http2.Transport{TLSClientConfig: tlsConfig}
 
 	return client, nil
 }
 
-func getToken(tokenParam string) (result string, err error) {
+func normalizeDeviceToken(tokenParam string) (result string, err error) {
 	rxHex := regexp.MustCompile("^[0-9a-fA-F]+$")
 	if rxHex.MatchString(tokenParam) {
 		return tokenParam, nil
@@ -230,15 +278,35 @@ func main() {
 		}
 	}
 
-	cert, err := getClientCert()
-	if err != nil {
-		log.Fatalf("Error loading/adding client cert: %s", err)
-	}
+	bearerToken := func() string {
+		if len(AuthTokenPath) > 0 {
+			bt, err := getClientBearerToken()
+			if err != nil {
+				log.Fatalf("Error load/init auth token: %s", err)
+			}
+			return bt
+		}
+		return ""
+	}()
 
-	client, err := getClient(cert)
-	if err != nil {
-		log.Fatalf("Error creating HTTP client: %s", err)
-	}
+	client := func() *http.Client {
+		client, err := getClient(
+			func() *tls.Certificate {
+				if len(AuthTokenPath) == 0 {
+					cert, err := getClientCert()
+					if err != nil {
+						log.Fatalf("Error load/init client cert: %s", err)
+					}
+					return cert
+				}
+				return nil
+			}(),
+		)
+		if err != nil {
+			log.Fatalf("Error creating HTTP client: %s", err)
+		}
+		return client
+	}()
 
 	var url = "https://%s/3/device/"
 	if IsSandbox {
@@ -247,38 +315,47 @@ func main() {
 		url = fmt.Sprintf(url, ApnsProductionHost)
 	}
 
-	token, err := getToken(DeviceToken)
+	token, err := normalizeDeviceToken(DeviceToken)
 	if err != nil {
 		log.Fatalf("Error decoding hex device token: %s", err)
 	}
 	url = url + token
 
-	var req *http.Request
-	var pushType string
+	req := func() *http.Request {
+		var body []byte
+		if len(MdmPushMagic) > 0 {
+			body = []byte(fmt.Sprintf(`{"aps": {}, "mdm": "%s"}`, MdmPushMagic))
+		} else {
+			body = []byte(fmt.Sprintf(`{"aps": {"alert" : "%s", "sound": "default"}}`, PushAlertMessage))
+		}
 
-	if len(MdmPushMagic) > 0 {
-		var body = []byte(fmt.Sprintf(`{"aps": {}, "mdm": "%s"}`, MdmPushMagic))
-		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 		if err != nil {
-			log.Fatalf("Error creating mdm POST request: %s", err)
+			log.Fatalf("Error creating POST request: %s", err)
 		}
-		pushType = "mdm"
-	} else {
-		var body = []byte(fmt.Sprintf(`{"aps": {"alert" : "%s", "sound": "default"}}`, PushAlertMessage))
-		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
-		if err != nil {
-			log.Fatalf("Error creating alert POST request: %s", err)
+
+		if len(MdmPushMagic) > 0 {
+			req.Header.Set("apns-push-type", "mdm")
+		} else {
+			req.Header.Set("apns-push-type", "alert")
 		}
-		pushType = "alert"
+
+		if len(bearerToken) > 0 {
+			req.Header.Set("authorization", fmt.Sprintf("bearer %s", bearerToken))
+		}
+		req.Header.Set("apns-expiration", "0")
+		//req.Header.Set("apns-priority", "10")
+		req.Header.Set("apns-topic", PushTopic)
+
+		return req
+	}()
+
+	log.Println(fmt.Sprintf("Sending... POST %s", url))
+	for k, v := range req.Header {
+		fmt.Print(k)
+		fmt.Print(": ")
+		fmt.Println(v)
 	}
-
-	req.Header.Set("apns-push-type", pushType)
-	req.Header.Set("apns-expiration", "0")
-	//req.Header.Set("apns-priority", "10")
-	req.Header.Set("apns-topic", PushTopic)
-
-	log.Println(fmt.Sprintf("POST %s", url))
-	log.Println(fmt.Sprintf("Sending (%s)...", pushType))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -286,16 +363,15 @@ func main() {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Error reading HTTP response body: %s", err)
-	}
-
 	for k, v := range resp.Header {
 		fmt.Print(k)
 		fmt.Print(": ")
 		fmt.Println(v)
 	}
 
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Error reading HTTP response body: %s", err)
+	}
 	fmt.Printf("Response: %s (%d) %s\n", resp.Proto, resp.StatusCode, string(body))
 }

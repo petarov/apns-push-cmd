@@ -1,14 +1,14 @@
 APNs Command Line Push
 ===================================================
 
-![build](https://github.com/petarov/apns-push-cmd/workflows/CI%20Build%20(Ubuntu%20x86_64)/badge.svg)
+![build](https://github.com/petarov/apns-push-cmd/workflows/CI%20Build/badge.svg)
 
 Send your push notifications to Apple Push Notification service from the command line. :envelope:
 
-Authentication mechanism support | Status
----------------------------------|--------
- APNs provider certificate       | :white_check_mark: yes
- Provider Authentication Tokens  | :x: no (WIP)
+Authentication Mechanism         | Supported
+---------------------------------|------------------------
+ Provider Authentication Tokens  | yes :white_check_mark:
+ APNs provider certificate       | yes :white_check_mark:
 
 # Installation
 
@@ -23,15 +23,21 @@ Show help:
 Send a push notification to your app using certificate-based authentication:
 
     apnscmd_linux_amd64 -cert-file app-cert.pem -cert-key app-private.pem \
-        -token 'c7b68e4eb7d604876bf5836133479ffa49449c669f7e6b79318ae59032e83c24' \
-        -topic 'com.my.app'
+        -token c7b68e4eb7d604876bf5836133479ffa49449c669f7e6b79318ae59032e83c24 \
+        -topic com.my.app
 
 Send an mdm push notification using certificate-based authentication with a PKCS#12 keystore:
 
     apnscmd_linux_amd64 -cert-p12 apns.p12 -cert-pass <my password> \
         -token 'v2RwEsm69Go4aY4vSFY2pRLped2BMqETO3gDGBx7XmxKwSaKtZik7Q==' \
-        -mdm-magic '1AA91790-BA78-4DBF-9102-FBA06E6110C4' \
-        -topic 'com.apple.mgmt.External.462ad9c3-7ca1-437b-8c6f-5575941a4ea7' 
+        -mdm-magic 1AA91790-BA78-4DBF-9102-FBA06E6110C4 \
+        -topic com.apple.mgmt.External.462ad9c3-7ca1-437b-8c6f-5575941a4ea7
+
+Send a push notification to your app using token-based authentication:
+
+    apnscmd_linux_amd64-auth-token AuthKey_BBC42Y2321.p8 -key-id BBC42Y2321 -team-id YXB7430FC8 \
+        -token c7b68e4eb7d604876bf5836133479ffa49449c669f7e6b79318ae59032e83c24 \
+        -topic com.my.app
 
 ## Extract keys from PKCS#12
 

@@ -1,4 +1,4 @@
-name: CI Build (Ubuntu x86_64)
+name: CI Build
 
 on:
   push:
