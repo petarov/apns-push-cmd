@@ -3,7 +3,7 @@ APNs Command Line Push
 
 ![build](https://github.com/petarov/apns-push-cmd/workflows/CI%20Build/badge.svg)
 
-Send your push notifications to Apple Push Notification service from the command line. :envelope:
+Send your push notifications over to Apple Push Notification service from the command line using HTTP/2 and TLS 1.2. :envelope:
 
 Authentication Mechanism         | Supported
 ---------------------------------|------------------------
