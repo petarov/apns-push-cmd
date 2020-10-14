@@ -108,6 +108,8 @@ var (
 	IsSandbox bool
 	// PushAlertMessage Alert text to display for app push notifications
 	PushAlertMessage string
+	// IsPort2197 Use port 2197 (instead of port 443) when communicating with APNs
+	IsPort2197 bool
 )
 
 // Required Mandatory parameters
@@ -125,8 +127,9 @@ func init() {
 	flag.StringVar(&DeviceToken, "token", "", "Required. Hexadecimal or Base64 encoded push token for the device")
 	flag.StringVar(&PushTopic, "topic", "", "Required. The topic the device subscribes to")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
-	flag.BoolVar(&IsSandbox, "sandbox", false, "Sends push notification to APNs sandbox at api.sandbox.push.apple.com")
 	flag.StringVar(&PushAlertMessage, "alert-text", "Hello from app-push-cmd!", "Alert text to display for app push notifications")
+	flag.BoolVar(&IsSandbox, "sandbox", false, "Sends push notification to APNs sandbox at api.sandbox.push.apple.com")
+	flag.BoolVar(&IsPort2197, "port2197", false, "Use port 2197 (instead of port 443) when communicating with APNs")
 }
 
 func getCertPool() (caCertPool *x509.CertPool, err error) {
@@ -308,12 +311,18 @@ func main() {
 		return client
 	}()
 
-	var url = "https://%s/3/device/"
+	var url string
 	if IsSandbox {
-		url = fmt.Sprintf(url, ApnsSandboxHost)
+		url = fmt.Sprintf("https://%s", ApnsSandboxHost)
 	} else {
-		url = fmt.Sprintf(url, ApnsProductionHost)
+		url = fmt.Sprintf("https://%s", ApnsProductionHost)
 	}
+
+	if IsPort2197 {
+		url = url + ":2197"
+	}
+
+	url = url + "/3/device/"
 
 	token, err := normalizeDeviceToken(DeviceToken)
 	if err != nil {
