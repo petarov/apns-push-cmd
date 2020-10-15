@@ -3,7 +3,7 @@ APNs Command Line Push
 
 ![build](https://github.com/petarov/apns-push-cmd/workflows/CI%20Build/badge.svg)
 
-:envelope: Send your push notifications to Apple Push Notification service from the command line using HTTP/2.
+<img align="left" src="apnsicon.png"> Send your push notifications to Apple Push Notification service from the command line using HTTP/2.
 
 Authentication Mechanism         | Supported
 ---------------------------------|------------------------
@@ -61,3 +61,5 @@ To extrcat certificate file from a PKCS#12 container use:
 # License
 
 [MIT](LICENSE)
+
+README icon by [Freepik](http://www.freepik.com/) from [Flaticon](https://www.flaticon.com/).
