@@ -3,7 +3,7 @@ APNs Command Line Push
 
 ![build](https://github.com/petarov/apns-push-cmd/workflows/CI%20Build/badge.svg)
 
-<img align="left" src="apnsicon.png"> Send your push notifications to Apple Push Notification service from the command line using HTTP/2.
+<img align="right" src="apnsicon.png"> Send your push notifications to Apple Push Notification service from the command line using HTTP/2.
 
 Authentication Mechanism         | Supported
 ---------------------------------|------------------------
