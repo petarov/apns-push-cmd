@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"regexp"
 	"time"
 
@@ -360,10 +361,16 @@ func main() {
 	}()
 
 	log.Println(fmt.Sprintf("Sending... POST %s", url))
-	for k, v := range req.Header {
-		fmt.Print(k)
-		fmt.Print(": ")
-		fmt.Println(v)
+
+	reqOut, err := httputil.DumpRequest(req, false)
+	if err != nil {
+		for k, v := range req.Header {
+			fmt.Print(k)
+			fmt.Print(": ")
+			fmt.Println(v)
+		}
+	} else {
+		fmt.Println(string(reqOut))
 	}
 
 	resp, err := client.Do(req)
@@ -372,10 +379,15 @@ func main() {
 	}
 	defer resp.Body.Close()
 
-	for k, v := range resp.Header {
-		fmt.Print(k)
-		fmt.Print(": ")
-		fmt.Println(v)
+	respOut, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		for k, v := range resp.Header {
+			fmt.Print(k)
+			fmt.Print(": ")
+			fmt.Println(v)
+		}
+	} else {
+		fmt.Println(string(respOut))
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
