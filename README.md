@@ -2,7 +2,7 @@ APNs Command Line Push
 ===================================================
 
 ![build](https://github.com/petarov/apns-push-cmd/workflows/CI%20Build/badge.svg)
-![goreport](https://goreportcard.com/badge/github.com/petarov/apns-push-cmd)
+[![goreport](https://goreportcard.com/badge/github.com/petarov/apns-push-cmd)](https://goreportcard.com/report/github.com/petarov/apns-push-cmd)
 
 <img align="right" src="apnsicon.png"> Send your push notifications to Apple Push Notification service from the command line using HTTP/2.
 
