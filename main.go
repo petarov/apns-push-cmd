@@ -17,7 +17,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/net/http2"
 )
