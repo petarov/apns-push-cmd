@@ -6,13 +6,15 @@ on:
       - "master"
     paths:
         - "**.go"
+        - "go.mod"
+        - "go.sum"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.15' ]
+        go: [ '1.17' ]
     steps:
       - name: Set up Go v${{ matrix.go }}
         uses: actions/setup-go@v2
