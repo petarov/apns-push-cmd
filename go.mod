@@ -1,9 +1,11 @@
 module github.com/petarov/apns-pushcmd
 
-go 1.15
+go 1.17
 
 require (
-	github.com/golang-jwt/jwt/v4 v4.2.0
-	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
-	golang.org/x/net v0.0.0-20211203184738-4852103109b8
+	github.com/golang-jwt/jwt/v4 v4.4.1
+	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
+	golang.org/x/net v0.0.0-20220421235706-1d1ef9303861
 )
+
+require golang.org/x/text v0.3.7 // indirect
