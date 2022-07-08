@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"flag"
@@ -352,6 +353,12 @@ func main() {
 			} else {
 				body = []byte(fmt.Sprintf(`{"aps": {"alert" : "%s", "sound": "default"}}`, PushAlertMessage))
 			}
+		}
+
+		var v interface{}
+		err = json.Unmarshal(body, &v)
+		if err != nil {
+			log.Fatalf("Error parsing JSON alert payload: %s", err)
 		}
 
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
