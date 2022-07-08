@@ -36,6 +36,20 @@ Send a push notification to your app using token-based authentication:
         -token c7b68e4eb7d604876bf5836133479ffa49449c669f7e6b79318ae59032e83c24 \
         -topic com.my.app
 
+Send a custom push notification to your app using token-based authentication with the JSON message specified in the command line:
+
+    apnscmd_linux_amd64 -auth-token AuthKey_BBC42Y2321.p8 -key-id BBC42Y2321 -team-id YXB7430FC8 \
+        -token c7b68e4eb7d604876bf5836133479ffa49449c669f7e6b79318ae59032e83c24 \
+        -topic com.my.app -alert-json '{"aps": {"alert" : "test", "sound": "default"}, "custom":"custom value"}'
+
+
+Send a custom push notification to your app using token-based authentication with the JSON message read from a file:
+
+    apnscmd_linux_amd64 -auth-token AuthKey_BBC42Y2321.p8 -key-id BBC42Y2321 -team-id YXB7430FC8 \
+        -token c7b68e4eb7d604876bf5836133479ffa49449c669f7e6b79318ae59032e83c24 \
+        -topic com.my.app -alert-filename custom.json
+
+
 Show all available arguments:
 
     apnscmd_linux_amd64 -h
