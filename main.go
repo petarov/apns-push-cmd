@@ -109,6 +109,10 @@ var (
 	IsSandbox bool
 	// PushAlertMessage Alert text to display for app push notifications
 	PushAlertMessage string
+	// PushAlertJSON raw JSON for app notification
+	PushAlertJSON string
+	// PushAlertFileName filename to read for JSON (will overwrite PushAlertJSON)
+	PushAlertFileName string
 	// IsPort2197 Use port 2197 (instead of port 443) when communicating with APNs
 	IsPort2197 bool
 )
@@ -129,6 +133,8 @@ func init() {
 	flag.StringVar(&PushTopic, "topic", "", "Required. The topic the device subscribes to")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
 	flag.StringVar(&PushAlertMessage, "alert-text", "Hello from app-push-cmd!", "Alert text to display for app push notifications")
+	flag.StringVar(&PushAlertJSON, "alert-json", "", "If this is set, this raw JSON will be sent instead of alert-text")
+	flag.StringVar(&PushAlertFileName, "alert-filename", "", "If this is set the content of this file will be sent instead of alert-text/alert-json")
 	flag.BoolVar(&IsSandbox, "sandbox", false, "Sends push notification to APNs sandbox at api.sandbox.push.apple.com")
 	flag.BoolVar(&IsPort2197, "port2197", false, "Use port 2197 (instead of port 443) when communicating with APNs")
 }
@@ -336,7 +342,16 @@ func main() {
 		if len(MdmPushMagic) > 0 {
 			body = []byte(fmt.Sprintf(`{"aps": {}, "mdm": "%s"}`, MdmPushMagic))
 		} else {
-			body = []byte(fmt.Sprintf(`{"aps": {"alert" : "%s", "sound": "default"}}`, PushAlertMessage))
+			if PushAlertFileName != "" {
+				body, err = ioutil.ReadFile(PushAlertFileName)
+				if err != nil {
+					log.Fatalf("Error reading file: %s", err)
+				}
+			} else if PushAlertJSON != "" {
+				body = []byte(PushAlertJSON)
+			} else {
+				body = []byte(fmt.Sprintf(`{"aps": {"alert" : "%s", "sound": "default"}}`, PushAlertMessage))
+			}
 		}
 
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
