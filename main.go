@@ -134,7 +134,7 @@ func init() {
 	flag.BoolVar(&IsExplicitTrust, "x-trust", false, "Explicitly trust Geo Trust CA and Apple IST CA 2 root certificates (Usually you should not need to do this)")
 	flag.StringVar(&DeviceToken, "token", "", "Required. Hexadecimal or Base64 encoded push token for the device")
 	flag.StringVar(&PushTopic, "topic", "", "Required. The topic the device subscribes to")
-	flag.StringVar(&PushType, "type", "", "The value of the apns-push-type. Possible vaules are: alert background location voip complication fileprovider mdm liveactivity'.  Default is 'alert'")
+	flag.StringVar(&PushType, "type", "", "The value of the apns-push-type. Possible vaules are: 'alert', 'background', 'location', 'voip', 'complication', 'fileprovider', 'mdm', 'liveactivity'.  Default is 'alert'")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
 	flag.StringVar(&PushAlertMessage, "alert-text", "Hello from app-push-cmd!", "Alert text to display for app push notifications")
 	flag.StringVar(&PushAlertJSON, "alert-json", "", "If this is set, this raw JSON will be sent instead of alert-text")
