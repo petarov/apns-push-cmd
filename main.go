@@ -11,10 +11,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"regexp"
 	"time"
 
@@ -174,7 +175,7 @@ func getCertPool() (caCertPool *x509.CertPool, err error) {
 
 func getClientCert() (_ *tls.Certificate, err error) {
 	if len(KeystorePath) > 0 {
-		keystoreBytes, err := ioutil.ReadFile(KeystorePath)
+		keystoreBytes, err := os.ReadFile(KeystorePath)
 		if err != nil {
 			log.Printf("Error reading keystore (%s)!", KeystorePath)
 			return nil, err
@@ -199,7 +200,7 @@ func getClientCert() (_ *tls.Certificate, err error) {
 		return &cert, nil
 	}
 
-	cert, err := tls.LoadX509KeyPair(*&ClientCertPath, *&ClientKeyPath)
+	cert, err := tls.LoadX509KeyPair(ClientCertPath, ClientKeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +209,7 @@ func getClientCert() (_ *tls.Certificate, err error) {
 }
 
 func getClientBearerToken() (auth string, err error) {
-	tokenBytes, err := ioutil.ReadFile(AuthTokenPath)
+	tokenBytes, err := os.ReadFile(AuthTokenPath)
 	if err != nil {
 		return "", err
 	}
@@ -355,7 +356,7 @@ func main() {
 			body = []byte(fmt.Sprintf(`{"aps": {}, "mdm": "%s"}`, MdmPushMagic))
 		} else {
 			if PushAlertFileName != "" {
-				body, err = ioutil.ReadFile(PushAlertFileName)
+				body, err = os.ReadFile(PushAlertFileName)
 				if err != nil {
 					log.Fatalf("Error reading file: %s", err)
 				}
@@ -427,7 +428,7 @@ func main() {
 		fmt.Println(string(respOut))
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalf("Error reading HTTP response body: %s", err)
 	}
