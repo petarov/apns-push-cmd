@@ -161,11 +161,11 @@ func getCertPool() (caCertPool *x509.CertPool, err error) {
 	// }
 	ok := caCertPool.AppendCertsFromPEM([]byte(RootGeoTrustGlobal))
 	if !ok {
-		return nil, fmt.Errorf("Error loading RootGeoTrustGlobal")
+		return nil, fmt.Errorf("error loading RootGeoTrustGlobal")
 	}
 	ok = caCertPool.AppendCertsFromPEM([]byte(RootAppleISTCA2G1))
 	if !ok {
-		return nil, fmt.Errorf("Error loading RootAppleISTCA2G1")
+		return nil, fmt.Errorf("error loading RootAppleISTCA2G1")
 	}
 	// }
 
@@ -215,7 +215,7 @@ func getClientBearerToken() (auth string, err error) {
 
 	block, _ := pem.Decode(tokenBytes)
 	if block == nil {
-		return "", errors.New("Auth token does not seem to be a valid .p8 key file")
+		return "", errors.New("auth token does not seem to be a valid .p8 key file")
 	}
 
 	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
@@ -397,7 +397,7 @@ func main() {
 		return req
 	}()
 
-	log.Println(fmt.Sprintf("Sending... POST %s", url))
+	log.Printf("Sending... POST %s\n", url)
 
 	reqOut, err := httputil.DumpRequest(req, false)
 	if err != nil {
