@@ -17,6 +17,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -114,6 +115,8 @@ var (
 	PushTopic string
 	// The value of the apns-push-type. Default to 'alert'
 	PushType string
+	// The value of the apns-priority. Default is 10
+	PushPriority int
 	// MdmPushMagic The magic string that has to be included in the push notification message.
 	MdmPushMagic string
 	// IsSandbox Sends push notification to APNs sandbox at api.sandbox.push.apple.com
@@ -142,7 +145,8 @@ func init() {
 	flag.BoolVar(&IsExplicitTrust, "x-trust", false, "Explicitly trust Apple root certificates (Usually you should not need to do this)")
 	flag.StringVar(&DeviceToken, "token", "", "Required. Hexadecimal or Base64 encoded push token for the device")
 	flag.StringVar(&PushTopic, "topic", "", "Required. The topic the device subscribes to")
-	flag.StringVar(&PushType, "type", "", "The value of the apns-push-type. Possible vaules are: 'alert', 'background', 'location', 'voip', 'complication', 'fileprovider', 'mdm', 'liveactivity'.  Default is 'alert'")
+	flag.StringVar(&PushType, "type", "", "The value of the apns-push-type header. Possible vaules are: 'alert', 'background', 'location', 'voip', 'complication', 'fileprovider', 'mdm', 'liveactivity'.  Default is 'alert'")
+	flag.IntVar(&PushPriority, "priority", 10, "The value of the apns-priority header. Possible vaules are: 10, 5, 1. Default is 10")
 	flag.StringVar(&MdmPushMagic, "mdm-magic", "", "The magic string that has to be included in the push notification message")
 	flag.StringVar(&PushAlertMessage, "alert-text", "Hello from app-push-cmd!", "Alert text to display for app push notifications")
 	flag.StringVar(&PushAlertJSON, "alert-json", "", "If this is set, this raw JSON will be sent instead of alert-text")
@@ -391,7 +395,7 @@ func main() {
 			req.Header.Set("authorization", fmt.Sprintf("bearer %s", bearerToken))
 		}
 		req.Header.Set("apns-expiration", "0")
-		//req.Header.Set("apns-priority", "10")
+		req.Header.Set("apns-priority", strconv.Itoa(PushPriority))
 		req.Header.Set("apns-topic", PushTopic)
 
 		return req
