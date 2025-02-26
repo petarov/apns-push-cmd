@@ -14,15 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.18' ]
+        go: [ '1.23' ]
     steps:
       - name: Set up Go v${{ matrix.go }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install deps
         run: |
@@ -30,7 +30,7 @@ jobs:
           go get -v -d ./...
 
       - name: Cache modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: $GOPATH/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -41,11 +41,11 @@ jobs:
 
       - name: Build binaries
         run: |
-          GOOS=linux GOARCH=amd64 go build -o apnscmd_linux_amd64
-          GOOS=linux GOARCH=386 go build -o apnscmd_linux_386
-          GOOS=linux GOARCH=arm64 go build -o apnscmd_linux_arm64
-          GOOS=darwin GOARCH=amd64 go build -o apnscmd_darwin_amd64
-          GOOS=windows GOARCH=386 go build -o apnscmd_windows_386.exe
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd_linux_amd64
+          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd_linux_arm64
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd_windows_amd64.exe
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd_darwin_amd64
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd_darwin_arm64
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:

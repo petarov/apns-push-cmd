@@ -7,15 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.18' ]
+        go: [ '1.23' ]
     steps:
       - name: Set up Go v${{ matrix.go }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install deps
         run: |
@@ -23,7 +23,7 @@ jobs:
           go get -v -d ./...
 
       - name: Cache modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: $GOPATH/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
