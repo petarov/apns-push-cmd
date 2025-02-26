@@ -29,7 +29,7 @@ import (
 const APPNAME = "apns-push-cmd"
 
 // VERSION Version
-const VERSION = "1.4"
+const VERSION = "1.5"
 
 var (
 	// ApnsSandboxHost Development push notifications
