@@ -36,59 +36,40 @@ var (
 	ApnsSandboxHost = "api.sandbox.push.apple.com"
 	// ApnsProductionHost Production push notifications
 	ApnsProductionHost = "api.push.apple.com"
-	// AAA Certificate Services Root (2028)
-	RootGeoTrustGlobal = `-----BEGIN CERTIFICATE-----
-MIIEMjCCAxqgAwIBAgIBATANBgkqhkiG9w0BAQUFADB7MQswCQYDVQQGEwJHQjEb
-MBkGA1UECAwSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHDAdTYWxmb3JkMRow
-GAYDVQQKDBFDb21vZG8gQ0EgTGltaXRlZDEhMB8GA1UEAwwYQUFBIENlcnRpZmlj
-YXRlIFNlcnZpY2VzMB4XDTA0MDEwMTAwMDAwMFoXDTI4MTIzMTIzNTk1OVowezEL
-MAkGA1UEBhMCR0IxGzAZBgNVBAgMEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UE
-BwwHU2FsZm9yZDEaMBgGA1UECgwRQ29tb2RvIENBIExpbWl0ZWQxITAfBgNVBAMM
-GEFBQSBDZXJ0aWZpY2F0ZSBTZXJ2aWNlczCCASIwDQYJKoZIhvcNAQEBBQADggEP
-ADCCAQoCggEBAL5AnfRu4ep2hxxNRUSOvkbIgwadwSr+GB+O5AL686tdUIoWMQua
-BtDFcCLNSS1UY8y2bmhGC1Pqy0wkwLxyTurxFa70VJoSCsN6sjNg4tqJVfMiWPPe
-3M/vg4aijJRPn2jymJBGhCfHdr/jzDUsi14HZGWCwEiwqJH5YZ92IFCokcdmtet4
-YgNW8IoaE+oxox6gmf049vYnMlhvB/VruPsUK6+3qszWY19zjNoFmag4qMsXeDZR
-rOme9Hg6jc8P2ULimAyrL58OAd7vn5lJ8S3frHRNG5i1R8XlKdH5kBjHYpy+g8cm
-ez6KJcfA3Z3mNWgQIJ2P2N7Sw4ScDV7oL8kCAwEAAaOBwDCBvTAdBgNVHQ4EFgQU
-oBEKIz6W8Qfs4q8p74Klf9AwpLQwDgYDVR0PAQH/BAQDAgEGMA8GA1UdEwEB/wQF
-MAMBAf8wewYDVR0fBHQwcjA4oDagNIYyaHR0cDovL2NybC5jb21vZG9jYS5jb20v
-QUFBQ2VydGlmaWNhdGVTZXJ2aWNlcy5jcmwwNqA0oDKGMGh0dHA6Ly9jcmwuY29t
-b2RvLm5ldC9BQUFDZXJ0aWZpY2F0ZVNlcnZpY2VzLmNybDANBgkqhkiG9w0BAQUF
-AAOCAQEACFb8AvCb6P+k+tZ7xkSAzk/ExfYAWMymtrwUSWgEdujm7l3sAg9g1o1Q
-GE8mTgHj5rCl7r+8dFRBv/38ErjHT1r0iWAFf2C3BUrz9vHCv8S5dIa2LX1rzNLz
-Rt0vxuBqw8M0Ayx9lt1awg6nCpnBBYurDC/zXDrPbDdVCYfeU0BsWO/8tqtlbgT2
-G9w84FoVxp7Z8VlIMCFlA2zs6SFz7JsDoeA3raAVGI/6ugLOpyypEBMs1OUIJqsi
-l2D4kF501KKaU73yqWjgom7C12yxow+ev+to51byrvLjKzg6CYG1a4XXvi3tPxq3
-smPi9WIsgtRqAEFQ8TmDn5XpNpaYbg==
------END CERTIFICATE-----`
-	// Apple Public Server RSA CA 12 - G1
-	RootAppleISTCA2G1 = `-----BEGIN CERTIFICATE-----
-MIIEkDCCA3igAwIBAgIQCuSPIwEwZEGSWeHCmumNGDANBgkqhkiG9w0BAQsFADB7
-MQswCQYDVQQGEwJHQjEbMBkGA1UECAwSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYD
-VQQHDAdTYWxmb3JkMRowGAYDVQQKDBFDb21vZG8gQ0EgTGltaXRlZDEhMB8GA1UE
-AwwYQUFBIENlcnRpZmljYXRlIFNlcnZpY2VzMB4XDTE5MDYxOTAwMDAwMFoXDTI4
-MTIwNjIzNTk1OVowZDErMCkGA1UEAxMiQXBwbGUgUHVibGljIFNlcnZlciBSU0Eg
-Q0EgMTIgLSBHMTETMBEGA1UEChMKQXBwbGUgSW5jLjETMBEGA1UECBMKQ2FsaWZv
-cm5pYTELMAkGA1UEBhMCVVMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
-AQC9vhI3XrifeRWYC+x6U5sPCaYAPncBLBBsyQdt7ztiyROEG6fEKZG1tToZMES3
-jtgqV+7RcBV9xX2jVeU+EwAnHkIpwoDWcte0gLfALL3hkVcwXJoJaojVF8mMHlJt
-QYTr3FYkZ6FqALt/LFUxeis3/Zgtug7EoqBsZeF5g79lSZtZqcNLm+3NuvZUdAHB
-GIzD++wVlOhy9IxahD/Z7eIkpuJTedYVpLmnX/fHq92gYoNHezlNN8vdILlsPV4k
-IdrwTKso7II25Kha0/l3hx2xEBtUIQLMGxKF+fD9AjcYhSMqhTM5/2tyud4QJxIy
-409Dj4OhNooHAxurBDHwV8ZlAgMBAAGjggElMIIBITAfBgNVHSMEGDAWgBSgEQoj
-PpbxB+zirynvgqV/0DCktDAdBgNVHQ4EFgQUHlwXkQVXAvx3XONwQ+xr/d3S2Gkw
-DgYDVR0PAQH/BAQDAgGGMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAh
-BgNVHSAEGjAYMAwGCiqGSIb3Y2QFCwQwCAYGZ4EMAQICMBIGA1UdEwEB/wQIMAYB
-Af8CAQAwQwYDVR0fBDwwOjA4oDagNIYyaHR0cDovL2NybC5jb21vZG9jYS5jb20v
-QUFBQ2VydGlmaWNhdGVTZXJ2aWNlcy5jcmwwNAYIKwYBBQUHAQEEKDAmMCQGCCsG
-AQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wDQYJKoZIhvcNAQELBQAD
-ggEBAGa7XPTd+1lgnT/dDf2agLAIIXpbTn6XtEGMq9jovXbK076zHlQSWapd6Zd/
-p/uWydwuTbd+cobkUTFZhKGMkY0e8gXgI2s09kQ0EfotFUOdQ7qf1U+UM7JIEZmD
-gsTn9vBLNwbtwH9t6cvYxH//VhWyL07pPkfTFBVqvAprGZ9MgraZD2S9qYu9usfS
-vuH4lr4b3NuZ7mh3zOs4aD3Omgx30DU8DV82LikGN4/MF+uDOGgHtPv0ozlvPrFc
-8bsE+lTnjP199w5X+kPtpzrkjYPNrGxTg4nhugo6y+GPOCl00S+T/794oTq/HFlj
-6IoOvOR7UaKo39qnYwA6Fs0F0to=
+	// SHA-2 Root  USERTrust RSA Certification Authority
+	USERTrustRSACA = `-----BEGIN CERTIFICATE-----
+MIIF3jCCA8agAwIBAgIQAf1tMPyjylGoG7xkDjUDLTANBgkqhkiG9w0BAQwFADCB
+iDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCk5ldyBKZXJzZXkxFDASBgNVBAcTC0pl
+cnNleSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxLjAsBgNV
+BAMTJVVTRVJUcnVzdCBSU0EgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwHhcNMTAw
+MjAxMDAwMDAwWhcNMzgwMTE4MjM1OTU5WjCBiDELMAkGA1UEBhMCVVMxEzARBgNV
+BAgTCk5ldyBKZXJzZXkxFDASBgNVBAcTC0plcnNleSBDaXR5MR4wHAYDVQQKExVU
+aGUgVVNFUlRSVVNUIE5ldHdvcmsxLjAsBgNVBAMTJVVTRVJUcnVzdCBSU0EgQ2Vy
+dGlmaWNhdGlvbiBBdXRob3JpdHkwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIK
+AoICAQCAEmUXNg7D2wiz0KxXDXbtzSfTTK1Qg2HiqiBNCS1kCdzOiZ/MPans9s/B
+3PHTsdZ7NygRK0faOca8Ohm0X6a9fZ2jY0K2dvKpOyuR+OJv0OwWIJAJPuLodMkY
+tJHUYmTbf6MG8YgYapAiPLz+E/CHFHv25B+O1ORRxhFnRghRy4YUVD+8M/5+bJz/
+Fp0YvVGONaanZshyZ9shZrHUm3gDwFA66Mzw3LyeTP6vBZY1H1dat//O+T23LLb2
+VN3I5xI6Ta5MirdcmrS3ID3KfyI0rn47aGYBROcBTkZTmzNg95S+UzeQc0PzMsNT
+79uq/nROacdrjGCT3sTHDN/hMq7MkztReJVni+49Vv4M0GkPGw/zJSZrM233bkf6
+c0Plfg6lZrEpfDKEY1WJxA3Bk1QwGROs0303p+tdOmw1XNtB1xLaqUkL39iAigmT
+Yo61Zs8liM2EuLE/pDkP2QKe6xJMlXzzawWpXhaDzLhn4ugTncxbgtNMs+1b/97l
+c6wjOy0AvzVVdAlJ2ElYGn+SNuZRkg7zJn0cTRe8yexDJtC/QV9AqURE9JnnV4ee
+UB9XVKg+/XRjL7FQZQnmWEIuQxpMtPAlR1n6BB6T1CZGSlCBst6+eLf8ZxXhyVeE
+Hg9j1uliutZfVS7qXMYoCAQlObgOK6nyTJccBz8NUvXt7y+CDwIDAQABo0IwQDAd
+BgNVHQ4EFgQUU3m/WqorSs9UgOHYm8Cd8rIDZsswDgYDVR0PAQH/BAQDAgEGMA8G
+A1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQEMBQADggIBAFzUfA3P9wF9QZllDHPF
+Up/L+M+ZBn8b2kMVn54CVVeWFPFSPCeHlCjtHzoBN6J2/FNQwISbxmtOuowhT6KO
+VWKR82kV2LyI48SqC/3vqOlLVSoGIG1VeCkZ7l8wXEskEVX/JJpuXior7gtNn3/3
+ATiUFJVDBwn7YKnuHKsSjKCaXqeYalltiz8I+8jRRa8YFWSQEg9zKC7F4iRO/Fjs
+8PRF/iKz6y+O0tlFYQXBl2+odnKPi4w2r78NBc5xjeambx9spnFixdjQg3IM8WcR
+iQycE0xyNN+81XHfqnHd4blsjDwSXWXavVcStkNr/+XeTWYRUc+ZruwXtuhxkYze
+Sf7dNXGiFSeUHM9h4ya7b6NnJSFd5t0dCy5oGzuCr+yDZ4XUmFF0sbmZgIn/f3gZ
+XHlKYC6SQK5MNyosycdiyA5d9zZbyuAlJQG03RoHnHcAP9Dc1ew91Pq7P8yF1m9/
+qS3fuQL39ZeatTXaw2ewh0qpKJ4jjv9cJ2vhsE/zB+4ALtRZh8tSQZXq9EfX7mRB
+VXyNWQKV3WKdwrnuWih0hKWbt5DHDAff9Yk2dDLWKMGwsAvgnEzDHNb842m1R0aB
+L6KCq9NjRHDEjf8tM7qtj3u1cIiuPhnPQCjY/MiQu12ZIvVS5ljFH4gxQ+6IHdfG
+jjxDah2nGN59PRbxYvnKkKj9
 -----END CERTIFICATE-----`
 )
 
@@ -158,20 +139,10 @@ func init() {
 func getCertPool() (caCertPool *x509.CertPool, err error) {
 	caCertPool = x509.NewCertPool()
 
-	// for i := 0; i < len(CaCertFiles); i++ {
-	// caCert, err := ioutil.ReadFile(fmt.Sprintf("certs/%s", CaCertFiles[i]))
-	// if err != nil {
-	// 	return nil, err
-	// }
-	ok := caCertPool.AppendCertsFromPEM([]byte(RootGeoTrustGlobal))
+	ok := caCertPool.AppendCertsFromPEM([]byte(USERTrustRSACA))
 	if !ok {
 		return nil, fmt.Errorf("error loading RootGeoTrustGlobal")
 	}
-	ok = caCertPool.AppendCertsFromPEM([]byte(RootAppleISTCA2G1))
-	if !ok {
-		return nil, fmt.Errorf("error loading RootAppleISTCA2G1")
-	}
-	// }
 
 	return caCertPool, nil
 }
@@ -258,11 +229,15 @@ func getClient(cert *tls.Certificate) (client *http.Client, err error) {
 		}
 		if cert != nil {
 			tlsConfig = &tls.Config{
-				Certificates: []tls.Certificate{*cert},
-				RootCAs:      caCertPool,
+				Certificates:       []tls.Certificate{*cert},
+				RootCAs:            caCertPool,
+				InsecureSkipVerify: false,
 			}
 		} else {
-			tlsConfig = &tls.Config{RootCAs: caCertPool}
+			tlsConfig = &tls.Config{
+				RootCAs:            caCertPool,
+				InsecureSkipVerify: false,
+			}
 		}
 	} else if cert != nil {
 		tlsConfig = &tls.Config{Certificates: []tls.Certificate{*cert}}
