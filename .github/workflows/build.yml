@@ -6,12 +6,12 @@ on:
       - 'master'
     tags:
       - '**'
-    paths:
-        - 'README.md'
-        - '**.go'
-        - 'go.mod'
-        - 'go.sum'
-        - '.github/workflows/build.yml'
+#    paths:
+#        - 'README.md'
+#        - '**.go'
+#        - 'go.mod'
+#        - 'go.sum'
+#        - '.github/workflows/build.yml'
 
 jobs:
   build:
