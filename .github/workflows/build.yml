@@ -11,7 +11,7 @@ on:
         - '**.go'
         - 'go.mod'
         - 'go.sum'
-        - 'workflows/build.yml'
+        - '.github/workflows/build.yml'
 
 jobs:
   build:
