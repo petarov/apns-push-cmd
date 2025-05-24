@@ -3,11 +3,14 @@ name: CI Build
 on:
   push:
     branches:
-      - "master"
+      - 'master'
+    tags:
+      - '**'
     paths:
-        - "**.go"
-        - "go.mod"
-        - "go.sum"
+        - 'README.md'
+        - '**.go'
+        - 'go.mod'
+        - 'go.sum'
 
 jobs:
   build:
@@ -41,18 +44,17 @@ jobs:
 
       - name: Build binaries
         run: |
-          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd_linux_amd64
-          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd_linux_arm64
-          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd_windows_amd64.exe
-          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd_darwin_amd64
-          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd_darwin_arm64
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-linux-x86_64
+          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd-linux-aarch64
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-windows-x86_64.exe
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-darwin-x86_64
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd-darwin-aarch64
 
-      - uses: "marvinpinto/action-automatic-releases@v1.2.1"
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: false
-          title: "Latest Build"
           files: |
             LICENSE
+            README.md
             apnscmd_*
