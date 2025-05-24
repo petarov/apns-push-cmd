@@ -240,9 +240,14 @@ func getClient(cert *tls.Certificate) (client *http.Client, err error) {
 			}
 		}
 	} else if cert != nil {
-		tlsConfig = &tls.Config{Certificates: []tls.Certificate{*cert}}
+		tlsConfig = &tls.Config{
+			Certificates: []tls.Certificate{*cert},
+			MinVersion:   tls.VersionTLS12,
+		}
 	} else {
-		tlsConfig = &tls.Config{}
+		tlsConfig = &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
 	}
 
 	client = &http.Client{Timeout: 20 * time.Second}
