@@ -232,17 +232,24 @@ func getClient(cert *tls.Certificate) (client *http.Client, err error) {
 				Certificates:       []tls.Certificate{*cert},
 				RootCAs:            caCertPool,
 				InsecureSkipVerify: false,
+				MinVersion:         tls.VersionTLS12,
 			}
 		} else {
 			tlsConfig = &tls.Config{
 				RootCAs:            caCertPool,
 				InsecureSkipVerify: false,
+				MinVersion:         tls.VersionTLS12,
 			}
 		}
 	} else if cert != nil {
-		tlsConfig = &tls.Config{Certificates: []tls.Certificate{*cert}}
+		tlsConfig = &tls.Config{
+			Certificates: []tls.Certificate{*cert},
+			MinVersion:   tls.VersionTLS12,
+		}
 	} else {
-		tlsConfig = &tls.Config{}
+		tlsConfig = &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
 	}
 
 	client = &http.Client{Timeout: 20 * time.Second}
@@ -276,6 +283,28 @@ func main() {
 		if !passed[r] {
 			flag.PrintDefaults()
 			log.Fatalf("Missing required argument: %s", r)
+		}
+	}
+
+	// Validate KeyID
+	if KeyID != "" {
+		if len(KeyID) != 10 {
+			log.Fatalf("Error: -key-id must be 10 characters long.")
+		}
+		matched, _ := regexp.MatchString("^[a-zA-Z0-9]+$", KeyID)
+		if !matched {
+			log.Fatalf("Error: -key-id must be alphanumeric.")
+		}
+	}
+
+	// Validate TeamID
+	if TeamID != "" {
+		if len(TeamID) != 10 {
+			log.Fatalf("Error: -team-id must be 10 characters long.")
+		}
+		matched, _ := regexp.MatchString("^[a-zA-Z0-9]+$", TeamID)
+		if !matched {
+			log.Fatalf("Error: -team-id must be alphanumeric.")
 		}
 	}
 
