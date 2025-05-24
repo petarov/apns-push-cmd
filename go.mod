@@ -2,7 +2,7 @@ module github.com/petarov/apns-pushcmd
 
 go 1.23.0
 
-toolchain go1.24.2
+toolchain go1.24
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
