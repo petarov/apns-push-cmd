@@ -32,9 +32,9 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-release-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-release-${{ matrix.go }}-
+            ${{ runner.os }}-go-release-
 
       - name: Build binaries
         run: |
@@ -48,6 +48,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
+          draft: false
+          make_latest: true
           files: |
             LICENSE
             README.md
