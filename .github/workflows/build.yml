@@ -2,12 +2,17 @@ name: CI Build
 
 on:
   push:
+    branches:
+      - '**'
     paths:
        - 'README.md'
        - '**.go'
        - 'go.mod'
        - 'go.sum'
        - '.github/workflows/*.yml'
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
   build:
@@ -37,7 +42,7 @@ jobs:
             ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-
+            ${{ runner.os }}-go-build-${{ matrix.go }}-
 
       - name: Vet code
         run: go vet ./...
