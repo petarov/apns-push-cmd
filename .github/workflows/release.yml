@@ -1,0 +1,48 @@
+name: CI Release
+
+on: push
+
+jobs:
+  build:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.24' ]
+    steps:
+      - name: Set up Go v${{ matrix.go }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          go version
+          go mod download && go mod verify
+
+      - name: Cache modules
+        uses: actions/cache@v3
+        with:
+          path: $GOPATH/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go
+
+      - name: Build binaries
+        run: |
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-linux-x86_64
+          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd-linux-aarch64
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-windows-x86_64.exe
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-darwin-x86_64
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd-darwin-aarch64
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            LICENSE
+            README.md
+            apnscmd_*

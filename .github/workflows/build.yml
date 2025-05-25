@@ -2,16 +2,12 @@ name: CI Build
 
 on:
   push:
-    branches:
-      - 'master'
-    tags:
-      - '**'
-#    paths:
-#        - 'README.md'
-#        - '**.go'
-#        - 'go.mod'
-#        - 'go.sum'
-#        - '.github/workflows/build.yml'
+    paths:
+       - 'README.md'
+       - '**.go'
+       - 'go.mod'
+       - 'go.sum'
+       - '.github/workflows/build.yml'
 
 jobs:
   build:
@@ -33,29 +29,18 @@ jobs:
           go version
           go mod download && go mod verify
 
-      - name: Cache modules
-        uses: actions/cache@v3
+      - name: Cache build artifacts
+        uses: actions/cache@v4
         with:
-          path: $GOPATH/pkg/mod
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Vet code
-        run: go vet
+        run: go vet ./...
 
-      - name: Build binaries
-        run: |
-          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-linux-x86_64
-          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd-linux-aarch64
-          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-windows-x86_64.exe
-          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-darwin-x86_64
-          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd-darwin-aarch64
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        if: github.ref_type == 'tag'
-        with:
-          files: |
-            LICENSE
-            README.md
-            apnscmd_*
+      - name: Build
+        run: go build -v .
