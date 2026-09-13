@@ -41,7 +41,6 @@ jobs:
           GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-linux-x86_64
           GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd-linux-aarch64
           GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-windows-x86_64.exe
-          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o apnscmd-darwin-x86_64
           GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o apnscmd-darwin-aarch64
 
       - name: Release
