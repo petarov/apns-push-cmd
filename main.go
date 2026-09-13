@@ -25,11 +25,10 @@ import (
 	"golang.org/x/net/http2"
 )
 
-// APPNAME App Name
-const APPNAME = "apns-push-cmd"
-
-// VERSION Version
-const VERSION = "1.6"
+const (
+	APPNAME = "apns-push-cmd"
+	VERSION = "1.6"
+)
 
 var (
 	// ApnsSandboxHost Development push notifications
