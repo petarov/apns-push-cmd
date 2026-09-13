@@ -22,12 +22,12 @@ jobs:
         go: [ '1.24' ]
     steps:
       - name: Set up Go v${{ matrix.go }}
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v7
         with:
           go-version: ${{ matrix.go }}
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install deps
         run: |
@@ -35,7 +35,7 @@ jobs:
           go mod download && go mod verify
 
       - name: Cache build artifacts
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cache/go-build
