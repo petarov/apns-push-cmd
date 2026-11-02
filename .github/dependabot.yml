@@ -3,5 +3,5 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: "monthly"
+      interval: "semiannually"
     open-pull-requests-limit: 5
